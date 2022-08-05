@@ -155,14 +155,13 @@
                   placeholder="Select a species"
                 ></v-select>
               </b-col>
-              <b-col cols="12"> Ta </b-col>
-              <b-col cols="12">
+              <!--<b-col cols="12">
                 <b-form-select
                   v-model="filter_selected"
                   :options="filter_options"
                 ></b-form-select>
-              </b-col>
-              <b-col cols="12">
+              </b-col>-->
+              <!--<b-col cols="12">
                 <b-list-group class="h-100">
                   <b-list-group-item
                     v-for="(i, u) in speciesList"
@@ -204,6 +203,9 @@
                     </div>
                   </b-list-group-item>
                 </b-list-group>
+              </b-col>-->
+              <b-col cols="12">
+              <hot-table :settings="hotSettings"></hot-table>
               </b-col>
             </b-row>
           </b-card-body>
@@ -262,46 +264,38 @@
 <script>
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
-
 import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
 import "vue-select/dist/vue-select.css";
-
-const RdYlGn = [
-  "#a50026",
-  "#d73027",
-  "#f46d43",
-  "#fdae61",
-  "#fee08b",
-  "#ffffbf",
-  "#d9ef8b",
-  "#a6d96a",
-  "#66bd63",
-  "#1a9850",
-  "#006837",
-];
-
+import 'handsontable/dist/handsontable.full.css';
 import { latLngBounds } from "leaflet";
 import {
   LMap,
   LTileLayer,
   LControlLayers,
   LControl,
-  LControlZoom,
-  LMarker,
   LPopup,
-  LIcon,
-  LCircle,
-  LCircleMarker,
   LGeoJson,
 } from "vue2-leaflet";
-import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
-
-import "leaflet-defaulticon-compatibility/";
-
+import { HotTable } from '@handsontable/vue';
+import Handsontable from 'handsontable/base';
+import {
+registerCellType, // cell types' registering function
+CheckboxCellType,
+} from 'handsontable/cellTypes';
+import {
+registerPlugin, // plugins' registering function
+AutoColumnSize,
+DropdownMenu,
+HiddenRows,
+Filters,
+MultiColumnSorting
+} from 'handsontable/plugins';
+registerCellType(CheckboxCellType);
+registerPlugin(DropdownMenu);
+registerPlugin(AutoColumnSize);
+registerPlugin(HiddenRows);
+registerPlugin(Filters);
+registerPlugin(MultiColumnSorting);
 import chroma from "chroma-js";
 import geojson from "./assets/grid_target.json";
 import sp_old0 from "./assets/sp_old.json";
@@ -318,7 +312,6 @@ let init_lkgd = sp_old.reduce(
   },
   [0, 0, 0, 0]
 );
-
 let min = geojson.features.reduce(
   (acc, x) => Math.min(x.properties.nb_lkgd[3], acc),
   10000
@@ -337,6 +330,7 @@ export default {
     LControl,
     LPopup,
     LGeoJson,
+    HotTable
   },
   data() {
     return {
@@ -384,6 +378,46 @@ export default {
         },
       ],
       opacity_value: 0.8,
+      hotSettings: {
+        data: sp_old.map(x =>{
+          x.lost = x.nb_lkgd[0]
+          x.kept = x.nb_lkgd[1]
+          x.gained = x.nb_lkgd[2]
+          x.diff = x.nb_lkgd[3]
+          return x
+        } ),
+        dropdownMenu: true,
+        filters: true,
+        dropdownMenu: ['filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+        multiColumnSorting : true,
+        stretchH: 'all', // 'none' is default
+        renderAllRows: false,
+        //colHeaders: ['SEQ', 'CommonName'],
+        columns: [
+          {
+            data: 'SEQ',
+            title: 'SEQ'
+          },
+          {
+            data: 'CommonName',
+            title: 'Common Name'
+          },
+          {
+            data: 'lost',
+            title: 'Lost'
+          },
+          {
+            data: 'kept',
+            title: 'Kept'
+          },
+          {
+            data: 'gained',
+            title: 'Gained'
+          }
+        ],
+        height: 'auto',
+        licenseKey: 'non-commercial-and-evaluation'
+      }
     };
   },
   methods: {},
